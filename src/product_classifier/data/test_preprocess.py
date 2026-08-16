@@ -1,14 +1,9 @@
 import pandas as pd
 
 from product_classifier.data.preprocess import preprocess_data
+from product_classifier.env import EXPECTED_CATEGORIES
 
-EXPECTED_CATEGORY = [
-    "Fresh & Perishable Items",
-    "Beverages",
-    "Dry Goods & Pantry Staples",
-    "Household & Personal Care",
-    "Specialty & Miscellaneous",
-]
+EXPECTED_CATEGORY_LIST = list(EXPECTED_CATEGORIES)
 
 
 def test_normal_product_with_category():
@@ -25,6 +20,21 @@ def test_normal_product_with_category():
         "cookies cakes Chocolate Sandwich Cookies"
     )
     assert result.iloc[0]["category"] == "Dry Goods & Pantry Staples"
+
+
+def test_leading_comma_with_category():
+    df = pd.DataFrame(
+        {
+            0: [""],
+            1: ['"Band-Aid Medium Hurt-Free Wrap 2"'],
+            2: ["Household & Personal Care"],
+        }
+    )
+
+    result = preprocess_data(df)
+
+    assert result.iloc[0]["product_name"] == 'Band-Aid Medium Hurt-Free Wrap 2"'
+    assert result.iloc[0]["category"] == "Household & Personal Care"
 
 
 def test_product_name_with_comma():
@@ -137,5 +147,5 @@ def test_expected_category_validation():
     result = preprocess_data(df)
 
     assert result.iloc[0]["product_name"] == "Paper Towels 12 Count Mega Rolls"
-    assert result.iloc[0]["category"] in EXPECTED_CATEGORY
+    assert result.iloc[0]["category"] in EXPECTED_CATEGORY_LIST
     assert result.iloc[0]["category"] == "Household & Personal Care"

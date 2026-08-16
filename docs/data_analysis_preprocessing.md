@@ -23,11 +23,19 @@
    - **False:**  
      `2: cookies cakes Chocolate Sandwich Cookies,Dry Goods & Pantry Staples;;;;`
 
+4. **Leading comma causes processing break**
+
+   - **False:**  
+     `42739: ,"Band-Aid Medium Hurt-Free Wrap 2\"",Household & Personal Care"`
+
+   - **True:**  
+     `42740: deodorants Cedarwood Juniper Deodorant,Household & Personal Care`
+
 ---
 
 ### Query_and_Validation_data.csv
 
-1. **No category**
+1. **Descriptions with commas**
 
    - **False:**  
      `4: Cheesecake, Chocolate Truffle,`
@@ -35,23 +43,7 @@
    - **True:**  
      `5: White Multifold Towels,Household & Personal Care`
 
-2. **Product information stacking, identify by checking trailing comma**
-
-   - **False:**  
-     `4: Cheesecake, Chocolate Truffle,`
-
-   - **True:**  
-     `5: White Multifold Towels,Household & Personal Care`
-
-3. **Descriptions with commas**
-
-   - **False:**  
-     `4: Cheesecake, Chocolate Truffle,`
-
-   - **True:**  
-     `5: White Multifold Towels,Household & Personal Care`
-
-4. **Invalid character in description**
+2. **Invalid character in description**
 
    - **False:**  
      `290: "bakery desserts 4\"" Banana Cream Pie,"`

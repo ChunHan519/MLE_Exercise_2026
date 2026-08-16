@@ -1,73 +1,48 @@
 import csv
-import pandas as pd
 from pathlib import Path
-
+import pandas as pd
+from product_classifier.env import EXPECTED_CATEGORIES
 
 EXPECTED_COLUMNS = ["product_name", "category"]
 
 
-def preload_csv(path: str) -> pd.DataFrame:
-    with Path(path).open("r", encoding="utf-8") as file:
+def preprocess_file(file_path: Path) -> pd.DataFrame:
+    with file_path.open("r", encoding="utf-8") as file:
         rows = file.readlines()
 
-    # Remove header
     rows = rows[1:]
+    cleaned_rows = [row.replace(";;;;", "").rstrip("\n") for row in rows]
 
-    # Remove trailing ";;;;"
-    rows = [
-        row.replace(";;;;", "").rstrip("\n")
-        for row in rows
-    ]
+    processed_data = []
 
-    return pd.DataFrame(csv.reader(rows))
-
-
-def fix_product_description_comma(df: pd.DataFrame) -> pd.DataFrame:
-    cleaned_rows = []
-
-    for _, row in df.iterrows():
-        # Check and strip all values in the row
-        values = []
-        for value in row:
-            if pd.notna(value):
-                value = str(value).strip()
-                values.append(value)
-
-        if not values:
+    for raw_line in cleaned_rows:
+        if not raw_line.strip():
             continue
 
-        # Check if the category is missing
-        category_missing = values[-1] == ""
+        parsed = list(csv.reader([raw_line]))[0]
+        
+        ends_with_comma = raw_line.strip().endswith(",")
 
-        # Remove empty values
-        values = [value for value in values if value != ""]
-
-        # Join product name
-        if category_missing:
-            product_name = ",".join(values)
+        if ends_with_comma:
+            if parsed and parsed[-1] == "":
+                product_name = ",".join(parsed[:-1])
+            else:
+                product_name = ",".join(parsed)
             category = ""
-
         else:
-            product_name = ",".join(values[:-1])
-            category = values[-1]
+            if len(parsed) > 1:
+                category = parsed[-1].strip()
+                product_name = ",".join(parsed[:-1])
+            else:
+                product_name = parsed[0] if parsed else ""
+                category = ""
 
-        cleaned_rows.append({
+        processed_data.append({
             "product_name": product_name,
             "category": category
         })
 
-    return pd.DataFrame(cleaned_rows)
-
-
-def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-    df.columns = EXPECTED_COLUMNS
-
-    return df
-
-
-def clean_product_description(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
+    df = pd.DataFrame(processed_data, columns=EXPECTED_COLUMNS)
 
     df["product_name"] = (
         df["product_name"]
@@ -76,20 +51,15 @@ def clean_product_description(df: pd.DataFrame) -> pd.DataFrame:
         .str.strip()
     )
 
-    return df
+    if "category" in df.columns:
+        df["category"] = (
+            df["category"]
+            .str.replace('"', "", regex=False)
+            .str.replace("\\", "", regex=False)
+            .str.strip()
+        )
 
-
-def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
-    return df.drop_duplicates().reset_index(drop=True)
-
-
-def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-
-    df = fix_product_description_comma(df)
-    df = standardize_columns(df)
-    df = clean_product_description(df)
-    df = remove_duplicates(df)
+    df = df.drop_duplicates().reset_index(drop=True)
 
     return df
 
@@ -99,23 +69,27 @@ def write_csv(df: pd.DataFrame, path: str) -> None:
 
 
 if __name__ == "__main__":
-    base_path = r"C:\Users\tiowt\Desktop\Work\Interview\NIQ_2026\TiowChunHan_NIQ_Interview"
-    raw_path = r"data\raw"
-    processed_path = r"data\processed"
+    root_dir = Path(__file__).resolve().parents[3]
+    raw_path = root_dir / "data" / "raw"
+    processed_path = root_dir / "data" / "processed"
+
+    processed_path.mkdir(parents=True, exist_ok=True)
 
     training_file_name = "Training_data.csv"
     validation_file_name = "Query_and_Validation_data.csv"
 
     print(f"Process {training_file_name}")
-    training_df = preload_csv(rf"{base_path}\{raw_path}\{training_file_name}")
-    processed_training_df = preprocess_data(training_df)
-    write_csv(processed_training_df, rf"{base_path}\{processed_path}\{training_file_name}")
-    print(f"Done process {training_file_name}")
+    train_input = raw_path / training_file_name
+    train_output = processed_path / training_file_name
+    if train_input.exists():
+        train_df = preprocess_file(train_input)
+        write_csv(train_df, str(train_output))
+        print(f"Done process {training_file_name}")
 
     print(f"Process {validation_file_name}")
-    validation_df = preload_csv(rf"{base_path}\{raw_path}\{validation_file_name}")
-    processed_validation_df = preprocess_data(validation_df)
-    write_csv(processed_validation_df, rf"{base_path}\{processed_path}\{validation_file_name}")
-    print(f"Done process {validation_file_name}")
-
-     
+    val_input = raw_path / validation_file_name
+    val_output = processed_path / validation_file_name
+    if val_input.exists():
+        val_df = preprocess_file(val_input)
+        write_csv(val_df, str(val_output))
+        print(f"Done process {validation_file_name}")
