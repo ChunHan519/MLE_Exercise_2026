@@ -1,0 +1,24 @@
+# Local virtualenvs & caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+
+# OS & IDE files
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Non-runtime project assets
+mlruns/
+data/
+docs/
+k8s/
+*.log
+README.md
+note.txt

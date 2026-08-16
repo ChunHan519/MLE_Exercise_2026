@@ -1,42 +1,49 @@
-# Python
+# Python & Virtual Environments
 __pycache__/
 *.py[cod]
+*$py.class
 .venv/
 venv/
+ENV/
+env/
 
-# Environment / secrets
+# Testing, Formatting & Code Quality
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+
+# Environment & Secrets
 .env
 .env.*
 !.env.example
 
-# IDE
+# Data & ML Artifacts
+data/
+!data/.gitkeep
+mlruns/
+*.db
+*.sqlite3
+
+# Docker Local Overrides
+docker-compose.override.yml
+
+# IDEs & Editors
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Windows
+# OS Specific
+.DS_Store
 Thumbs.db
 Desktop.ini
+ehthumbs.db
 
-# macOS
-.DS_Store
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Testing
-.pytest_cache/
-.coverage
-
-# Build
+# Build & Package Distributions
 dist/
 build/
 *.egg-info/
-
-# Logs
 *.log
-
-# Data 
-data/**/*.csv
-
-# Ignore local MLflow runs and databases
-mlruns/
