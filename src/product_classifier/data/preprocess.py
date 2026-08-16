@@ -6,61 +6,89 @@ from product_classifier.env import EXPECTED_CATEGORIES
 EXPECTED_COLUMNS = ["product_name", "category"]
 
 
-def preprocess_file(file_path: Path) -> pd.DataFrame:
-    with file_path.open("r", encoding="utf-8") as file:
-        rows = file.readlines()
+def load_data(input_data: str | Path | pd.DataFrame) -> pd.DataFrame:
+    if isinstance(input_data, (str, Path)):
+        file_path = Path(input_data)
+        with file_path.open("r", encoding="utf-8") as file:
+            raw_lines = file.readlines()
+        rows = raw_lines[1:]
+        cleaned_lines = [row.replace(";;;;", "").rstrip("\n") for row in rows]
+        parsed_rows = list(csv.reader(cleaned_lines))
+        return pd.DataFrame(parsed_rows)
+    return input_data.copy()
 
-    rows = rows[1:]
-    cleaned_rows = [row.replace(";;;;", "").rstrip("\n") for row in rows]
 
+def fix_product_description_comma(df: pd.DataFrame) -> pd.DataFrame:
     processed_data = []
-
-    for raw_line in cleaned_rows:
-        if not raw_line.strip():
+    for _, row in df.iterrows():
+        values = [str(val).strip() for val in row if pd.notna(val) and str(val).strip() != ""]
+        if not values:
             continue
 
-        parsed = list(csv.reader([raw_line]))[0]
-        
-        ends_with_comma = raw_line.strip().endswith(",")
-
-        if ends_with_comma:
-            if parsed and parsed[-1] == "":
-                product_name = ",".join(parsed[:-1])
-            else:
-                product_name = ",".join(parsed)
-            category = ""
+        category = ""
+        if values[-1] in EXPECTED_CATEGORIES:
+            category = values[-1]
+            product_values = values[:-1]
         else:
-            if len(parsed) > 1:
-                category = parsed[-1].strip()
-                product_name = ",".join(parsed[:-1])
-            else:
-                product_name = parsed[0] if parsed else ""
-                category = ""
+            product_values = values
 
+        product_name = ",".join(product_values)
         processed_data.append({
             "product_name": product_name,
             "category": category
         })
+    return pd.DataFrame(processed_data)
 
-    df = pd.DataFrame(processed_data, columns=EXPECTED_COLUMNS)
 
-    df["product_name"] = (
-        df["product_name"]
-        .str.replace('"', "", regex=False)
-        .str.replace("\\", "", regex=False)
-        .str.strip()
-    )
+def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df.columns = EXPECTED_COLUMNS
+    return df
 
+
+def clean_product_description(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    def clean_name(name: str) -> str:
+        if not isinstance(name, str):
+            return name
+        name = name.replace("\\", "").strip()
+        if name.startswith('"') and name.endswith('"'):
+            inner = name[1:-1]
+            if inner and inner[-1].isdigit():
+                name = name[1:]
+            else:
+                name = inner
+        return name
+
+    df["product_name"] = df["product_name"].apply(clean_name)
+    return df
+
+
+def clean_category(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
     if "category" in df.columns:
         df["category"] = (
             df["category"]
             .str.replace('"', "", regex=False)
             .str.replace("\\", "", regex=False)
+            .str.rstrip(";")
             .str.strip()
         )
+    return df
 
-    df = df.drop_duplicates().reset_index(drop=True)
 
+def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+    return df.drop_duplicates().reset_index(drop=True)
+
+
+def preprocess_data(input_data: str | Path | pd.DataFrame) -> pd.DataFrame:
+    df = load_data(input_data)
+    df = fix_product_description_comma(df)
+    df = standardize_columns(df)
+    df = clean_product_description(df)
+    df = clean_category(df)
+    df = remove_duplicates(df)
     return df
 
 
@@ -82,7 +110,7 @@ if __name__ == "__main__":
     train_input = raw_path / training_file_name
     train_output = processed_path / training_file_name
     if train_input.exists():
-        train_df = preprocess_file(train_input)
+        train_df = preprocess_data(train_input)
         write_csv(train_df, str(train_output))
         print(f"Done process {training_file_name}")
 
@@ -90,6 +118,6 @@ if __name__ == "__main__":
     val_input = raw_path / validation_file_name
     val_output = processed_path / validation_file_name
     if val_input.exists():
-        val_df = preprocess_file(val_input)
+        val_df = preprocess_data(val_input)
         write_csv(val_df, str(val_output))
         print(f"Done process {validation_file_name}")
