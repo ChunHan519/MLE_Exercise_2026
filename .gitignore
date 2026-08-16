@@ -39,4 +39,4 @@ build/
 data/**/*.csv
 
 # Ignore local MLflow runs and databases
-mlflow_runs/
+mlruns/
