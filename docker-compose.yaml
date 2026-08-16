@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  product-classifier:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: product_classifier_app
+    ports:
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 2G
+        reservations:
+          cpus: '0.50'
+          memory: 512M
