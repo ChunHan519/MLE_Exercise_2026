@@ -2,6 +2,14 @@ import pandas as pd
 
 from product_classifier.data.preprocess import preprocess_data
 
+EXPECTED_CATEGORY = [
+    "Fresh & Perishable Items",
+    "Beverages",
+    "Dry Goods & Pantry Staples",
+    "Household & Personal Care",
+    "Specialty & Miscellaneous",
+]
+
 
 def test_normal_product_with_category():
     df = pd.DataFrame(
@@ -116,3 +124,18 @@ def test_remove_duplicates():
     result = preprocess_data(df)
 
     assert len(result) == 1
+
+
+def test_expected_category_validation():
+    df = pd.DataFrame(
+        {
+            0: ["Paper Towels 12 Count Mega Rolls"],
+            1: ["Household & Personal Care"],
+        }
+    )
+
+    result = preprocess_data(df)
+
+    assert result.iloc[0]["product_name"] == "Paper Towels 12 Count Mega Rolls"
+    assert result.iloc[0]["category"] in EXPECTED_CATEGORY
+    assert result.iloc[0]["category"] == "Household & Personal Care"

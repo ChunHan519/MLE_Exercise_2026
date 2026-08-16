@@ -72,3 +72,17 @@
 5. Clean malformed quotes in product descriptions.
 6. Remove duplicate rows.
 7. Save the cleaned data.
+
+---
+
+## Notes
+
+* **Expected Category Whitelist:**
+  - `Fresh & Perishable Items`
+  - `Beverages`
+  - `Dry Goods & Pantry Staples`
+  - `Household & Personal Care`
+  - `Specialty & Miscellaneous`
+
+* **Extra Lowercase Product Type Initial:** 
+  - `Keep for text classification, no processing on initial and case handling.`
