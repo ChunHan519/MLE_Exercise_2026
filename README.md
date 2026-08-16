@@ -8,6 +8,9 @@ FastAPI-based production service for product classification, featuring ML model 
 
 ```text
 MLE_Exercise_2026/
+├── data/                    # Data Directory
+│   ├── processed/
+│   └── raw/
 ├── deploy/                  # Production Kubernetes manifests
 │   └── manifests.yaml
 ├── docs/                    # Architectural and analysis documentation
@@ -50,6 +53,9 @@ MLE_Exercise_2026/
 ---
 
 ## Setup & Pipeline Execution
+
+### 0. Copy Data 
+You need to copy the provided data under data/raw/ before start.
 
 ### 1. Environment Setup
 ```bash
