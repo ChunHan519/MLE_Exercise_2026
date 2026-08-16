@@ -1,3 +1,9 @@
+## Data Lineage & Phase-Wise Dataset Usage
+
+| Phase | Input Dataset / File | Script / Module | Output / Destination Artifact |
+| :--- | :--- | :--- | :--- |
+| **1. Data Preprocessing** | `data/raw/Training_data.csv`<br>`data/raw/Query_and_Validation_data.csv` | `src.product_classifier.data.preprocess` | Cleaned train/validation datasets in `data/processed/` |
+
 ## Data Issue
 
 ### Training_data.csv
