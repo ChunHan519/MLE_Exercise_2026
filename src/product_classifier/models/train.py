@@ -1,3 +1,5 @@
+import logging
+import warnings
 from pathlib import Path
 import time
 import mlflow
@@ -14,17 +16,27 @@ from .classifier import (
 )
 from .data_loader import DataLoader
 
+logging.getLogger("mlflow").setLevel(logging.WARNING)
+logging.getLogger("mlflow.utils.environment").setLevel(logging.ERROR)
+logging.getLogger("mlflow.utils.uv_utils").setLevel(logging.ERROR)
+
 
 def train_and_log():
     root_dir = Path(__file__).resolve().parents[3]
     
-    mlruns_dir = root_dir / "mlflow_runs"
+    mlruns_dir = root_dir / "mlruns"
     mlruns_dir.mkdir(parents=True, exist_ok=True)
     
     db_file_path = mlruns_dir / "mlflow.db"
     
     mlflow.set_tracking_uri(f"sqlite:///{db_file_path.as_posix()}")
-    mlflow.set_experiment("category_classification_training")
+    
+    experiment_name = "category_classification_training"
+    try:
+        mlflow.create_experiment(experiment_name, artifact_location=mlruns_dir.as_uri())
+    except Exception:
+        pass
+    mlflow.set_experiment(experiment_name)
 
     mlflow.sklearn.autolog(log_models=True, silent=True)
 
@@ -32,17 +44,13 @@ def train_and_log():
     loader = DataLoader(processed_data_dir=processed_dir)
     X_train, X_val, y_train, y_val = loader.load_train_splits()
 
-    # Filter data to only include the 5 fixed categories
     train_mask = y_train.isin(EXPECTED_CATEGORIES)
     X_train, y_train = X_train[train_mask], y_train[train_mask]
 
     val_mask = y_val.isin(EXPECTED_CATEGORIES)
     X_val, y_val = X_val[val_mask], y_val[val_mask]
 
-    # Use fixed categories for a stable label mapping
-    label_mapping = {
-        cat: idx for idx, cat in enumerate(sorted(EXPECTED_CATEGORIES))
-    }
+    label_mapping = {cat: idx for idx, cat in enumerate(sorted(EXPECTED_CATEGORIES))}
 
     classifiers: list[BaseClassifier] = [
         LogisticRegressionClassifier(),
