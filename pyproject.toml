@@ -1,16 +1,20 @@
 [project]
-name = "mle-exercise-2026"
+name = "product-classifier"
 version = "0.1.0"
-description = "Add your description here"
+description = "Production ML system for product description classification"
 readme = "README.md"
 authors = [
     { name = "ChunHan519", email = "tiowtiow0519@gmail.com" }
 ]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pandas>=2.3.3",
+]
 
-[project.scripts]
-mle-exercise-2026 = "mle_exercise_2026:main"
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
